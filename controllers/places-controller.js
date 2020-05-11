@@ -1,5 +1,5 @@
 const HttpError = require('../models/http-error')
-var uniqid = require('uniqid');
+var uniqid = require('uniqid')
 
 const DUMMY_PLACES = [
   {
@@ -41,15 +41,15 @@ const getPlaceById = (req, res) => {
 const getPlacesByUserId = (req, res, next) => {
   const userId = req.params.userId
   const places = DUMMY_PLACES.filter(place => place.creator === userId)
-  if (places.length === 0) {
+  if (places.length === 0 || !places) {
     return next(
-      new HttpError('Could not find a place for the provided user id', 404)
+      new HttpError('Could not find places for the provided user id', 404)
     )
   }
   res.json({ places })
 }
 
-const createPlace = (req, res, next) => {
+const createPlace = (req, res) => {
   const { title, description, coordinates, address, creator } = req.body
   const createdPlace = {
     id: uniqid(),
@@ -63,8 +63,36 @@ const createPlace = (req, res, next) => {
   res.status(201).json(createdPlace)
 }
 
+const updatePlace = (req, res, next) => {
+  const placeId = req.params.placeId
+  const { title, description } = req.body
+  const updatedPlace = { ...DUMMY_PLACES.find(place => place.id === placeId) }
+  const placeIndex = DUMMY_PLACES.findIndex(place => place.id === placeId)
+  if (placeIndex > -1) {
+    updatedPlace.title = title
+    updatedPlace.description = description
+    DUMMY_PLACES[placeIndex] = updatedPlace
+    return res.status(200).json({ place: updatedPlace })
+  }
+  return next(new HttpError('Could not find a place for the provided id', 404))
+}
+
+const deletePlace = (req, res, next) => {
+  const placeId = req.params.placeId
+  const placeIndex = DUMMY_PLACES.findIndex(place => place.id === placeId)
+  if (placeIndex > -1) {
+    DUMMY_PLACES.splice(placeIndex, 1)
+    return res
+      .status(200)
+      .json({ message: 'The place was deleted successfully.' })
+  }
+  return next(new HttpError('Could not find a place for the provided id', 404))
+}
+
 module.exports = {
   getPlaceById,
   getPlacesByUserId,
-  createPlace
+  createPlace,
+  updatePlace,
+  deletePlace
 }
