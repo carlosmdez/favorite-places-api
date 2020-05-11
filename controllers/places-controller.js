@@ -72,9 +72,9 @@ const updatePlace = (req, res, next) => {
     updatedPlace.title = title
     updatedPlace.description = description
     DUMMY_PLACES[placeIndex] = updatedPlace
-    return res.status(200).json({ place: updatedPlace })
+    return res.json({ place: updatedPlace })
   }
-  return next(new HttpError('Could not find a place for the provided id', 404))
+  next(new HttpError('Could not find a place for the provided id', 404))
 }
 
 const deletePlace = (req, res, next) => {
@@ -82,11 +82,9 @@ const deletePlace = (req, res, next) => {
   const placeIndex = DUMMY_PLACES.findIndex(place => place.id === placeId)
   if (placeIndex > -1) {
     DUMMY_PLACES.splice(placeIndex, 1)
-    return res
-      .status(200)
-      .json({ message: 'The place was deleted successfully.' })
+    return res.json({ message: 'The place was deleted successfully.' })
   }
-  return next(new HttpError('Could not find a place for the provided id', 404))
+  next(new HttpError('Could not find a place for the provided id', 404))
 }
 
 module.exports = {
