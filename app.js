@@ -4,10 +4,16 @@ const bodyParser = require('body-parser')
 const placesRoutes = require('./routes/places.routes')
 const usersRoutes = require('./routes/users.routes')
 const HttpError = require('./models/http-error')
+const sanitizeData = require('./utils/sanitizeData')
 
 const app = express()
 
 app.use(bodyParser.json())
+
+app.use((req, res, next) => {
+  req.body = sanitizeData(req.body)
+  next()
+})
 
 app.use('/api/places', placesRoutes)
 app.use('/api/users', usersRoutes)

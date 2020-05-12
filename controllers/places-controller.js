@@ -1,5 +1,10 @@
 const HttpError = require('../models/http-error')
-var uniqid = require('uniqid')
+const uniqid = require('uniqid')
+
+const {
+  createPlaceValidator,
+  updatePlaceValidator
+} = require('../utils/places-validator')
 
 const DUMMY_PLACES = [
   {
@@ -35,7 +40,7 @@ const getPlaceById = (req, res) => {
     throw new HttpError('Could not find a place for the provided id', 404)
   }
 
-  res.json({ place })
+  return res.json({ place })
 }
 
 const getPlacesByUserId = (req, res, next) => {
@@ -46,10 +51,14 @@ const getPlacesByUserId = (req, res, next) => {
       new HttpError('Could not find places for the provided user id', 404)
     )
   }
-  res.json({ places })
+  return res.json({ places })
 }
 
-const createPlace = (req, res) => {
+const createPlace = (req, res, next) => {
+  const validator = createPlaceValidator(req.body)
+  if (!validator.isValid) {
+    return next(validator.error)
+  }
   const { title, description, coordinates, address, creator } = req.body
   const createdPlace = {
     id: uniqid(),
@@ -60,11 +69,15 @@ const createPlace = (req, res) => {
     creator
   }
   DUMMY_PLACES.push(createdPlace)
-  res.status(201).json(createdPlace)
+  return res.status(201).json(createdPlace)
 }
 
 const updatePlace = (req, res, next) => {
   const placeId = req.params.placeId
+  const validator = updatePlaceValidator(req.body)
+  if (!validator.isValid) {
+    return next(validator.error)
+  }
   const { title, description } = req.body
   const updatedPlace = { ...DUMMY_PLACES.find(place => place.id === placeId) }
   const placeIndex = DUMMY_PLACES.findIndex(place => place.id === placeId)
@@ -74,7 +87,7 @@ const updatePlace = (req, res, next) => {
     DUMMY_PLACES[placeIndex] = updatedPlace
     return res.json({ place: updatedPlace })
   }
-  next(new HttpError('Could not find a place for the provided id', 404))
+  return next(new HttpError('Could not find a place for the provided id', 404))
 }
 
 const deletePlace = (req, res, next) => {
@@ -84,7 +97,7 @@ const deletePlace = (req, res, next) => {
     DUMMY_PLACES.splice(placeIndex, 1)
     return res.json({ message: 'The place was deleted successfully.' })
   }
-  next(new HttpError('Could not find a place for the provided id', 404))
+  return next(new HttpError('Could not find a place for the provided id', 404))
 }
 
 module.exports = {
