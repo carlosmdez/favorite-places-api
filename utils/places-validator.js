@@ -7,20 +7,10 @@ const createPlaceSchema = {
   properties: {
     title: { type: 'string', minLength: 3 },
     description: { type: 'string', minLength: 3 },
-    coordinates: {
-      type: 'object',
-      minProperties: 2,
-      maxProperties: 2,
-      required: ['lat', 'lng'],
-      properties: {
-        lat: { type: 'number' },
-        lng: { type: 'number' }
-      }
-    },
     address: { type: 'string', minLength: 3 },
     creator: { type: 'string', minLength: 2 }
   },
-  required: ['title', 'description', 'coordinates', 'address', 'creator']
+  required: ['title', 'description', 'address', 'creator']
 }
 
 const updatePlaceSchema = {

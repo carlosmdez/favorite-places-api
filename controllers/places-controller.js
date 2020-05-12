@@ -1,6 +1,7 @@
 const HttpError = require('../models/http-error')
 const uniqid = require('uniqid')
 
+const getCoordsForAddress = require('../utils/location')
 const {
   createPlaceValidator,
   updatePlaceValidator
@@ -54,12 +55,19 @@ const getPlacesByUserId = (req, res, next) => {
   return res.json({ places })
 }
 
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
   const validator = createPlaceValidator(req.body)
   if (!validator.isValid) {
     return next(validator.error)
   }
-  const { title, description, coordinates, address, creator } = req.body
+  const { title, description, address, creator } = req.body
+  let coordinates
+  try {
+    coordinates = await getCoordsForAddress(address)
+  } catch (error) {
+    return next(error)
+  }
+  
   const createdPlace = {
     id: uniqid(),
     title,
