@@ -1,11 +1,10 @@
 const HttpError = require('../models/http-error')
-const uniqid = require('uniqid')
-
 const getCoordsForAddress = require('../utils/location')
 const {
   createPlaceValidator,
   updatePlaceValidator
 } = require('../utils/places-validator')
+const Place = require('../models/place')
 
 const DUMMY_PLACES = [
   {
@@ -34,25 +33,51 @@ const DUMMY_PLACES = [
   }
 ]
 
-const getPlaceById = (req, res) => {
+const getPlaceById = async (req, res, next) => {
   const placeId = req.params.placeId
-  const place = DUMMY_PLACES.find(place => place.id === placeId)
-  if (!place) {
-    throw new HttpError('Could not find a place for the provided id', 404)
+  let place
+  try {
+    place = await Place.findById(placeId)
+  } catch (err) {
+    const error = new HttpError(
+      'Something went wrong, could not find a place',
+      500
+    )
+    next(error)
   }
 
-  return res.json({ place })
+  if (!place) {
+    const error = new HttpError(
+      'Could not find a place for the provided id',
+      404
+    )
+    next(error)
+  }
+
+  return res.json({ place: place.toObject({ getters: true }) })
 }
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.userId
-  const places = DUMMY_PLACES.filter(place => place.creator === userId)
-  if (places.length === 0 || !places) {
+  let places
+  try {
+    places = await Place.find({ creator: userId })
+  } catch (err) {
+    const error = new HttpError(
+      'Something went wrong, could not find places',
+      500
+    )
+    next(error)
+  }
+
+  if (!places || places.length === 0) {
     return next(
       new HttpError('Could not find places for the provided user id', 404)
     )
   }
-  return res.json({ places })
+  return res.json({
+    places: places.map(place => place.toObject({ getters: true }))
+  })
 }
 
 const createPlace = async (req, res, next) => {
@@ -67,45 +92,68 @@ const createPlace = async (req, res, next) => {
   } catch (error) {
     return next(error)
   }
-  
-  const createdPlace = {
-    id: uniqid(),
+
+  const createdPlace = new Place({
     title,
     description,
-    location: coordinates,
+    image:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Vue_de_nuit_de_la_Place_Stanislas_%C3%A0_Nancy.jpg/1088px-Vue_de_nuit_de_la_Place_Stanislas_%C3%A0_Nancy.jpg',
     address,
+    location: coordinates,
     creator
+  })
+
+  try {
+    await createdPlace.save()
+  } catch (err) {
+    const error = new HttpError(
+      'Creating place failed, plase try it again',
+      500
+    )
+    return next(error)
   }
-  DUMMY_PLACES.push(createdPlace)
+
   return res.status(201).json(createdPlace)
 }
 
-const updatePlace = (req, res, next) => {
+const updatePlace = async (req, res, next) => {
   const placeId = req.params.placeId
   const validator = updatePlaceValidator(req.body)
   if (!validator.isValid) {
     return next(validator.error)
   }
   const { title, description } = req.body
-  const updatedPlace = { ...DUMMY_PLACES.find(place => place.id === placeId) }
-  const placeIndex = DUMMY_PLACES.findIndex(place => place.id === placeId)
-  if (placeIndex > -1) {
-    updatedPlace.title = title
-    updatedPlace.description = description
-    DUMMY_PLACES[placeIndex] = updatedPlace
-    return res.json({ place: updatedPlace })
+  let place
+  try {
+    place = await Place.findByIdAndUpdate(
+      placeId,
+      { title, description },
+      { new: true }
+    )
+  } catch (err) {
+    const error = new HttpError(
+      'Updating place failed, plase try it again',
+      500
+    )
+    return next(error)
   }
-  return next(new HttpError('Could not find a place for the provided id', 404))
+  return res.json({ place: place.toObject({ getters: true }) })
 }
 
-const deletePlace = (req, res, next) => {
+const deletePlace = async (req, res, next) => {
   const placeId = req.params.placeId
-  const placeIndex = DUMMY_PLACES.findIndex(place => place.id === placeId)
-  if (placeIndex > -1) {
-    DUMMY_PLACES.splice(placeIndex, 1)
-    return res.json({ message: 'The place was deleted successfully.' })
+
+  let place
+  try {
+    place = await Place.findByIdAndRemove(placeId)
+  } catch (err) {
+    const error = new HttpError(
+      'Could not find a place for the provided id',
+      404
+    )
+    return next(error)
   }
-  return next(new HttpError('Could not find a place for the provided id', 404))
+  return res.json({ message: 'The place was deleted successfully.' })
 }
 
 module.exports = {

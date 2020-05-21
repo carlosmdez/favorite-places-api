@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
 
 const placesRoutes = require('./routes/places.routes')
 const usersRoutes = require('./routes/users.routes')
@@ -32,4 +33,18 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message } || 'An unknown error ocurred!')
 })
 
-app.listen(5000)
+const user = 'carlos'
+const pass = 'onepiece'
+const project = 'places-app'
+const uri = `mongodb+srv://${user}:${pass}@shanksdb-gyptc.mongodb.net/${project}?retryWrites=true&w=majority`
+
+mongoose
+  .connect(uri, { useUnifiedTopology: true, useNewUrlParser: true })
+  .then(() => {
+    console.log('Database connected successfully.')
+    app.listen(5000)
+  })
+  .catch(err => {
+    console.log('Database connection failed.')
+    console.log(err)
+  })
