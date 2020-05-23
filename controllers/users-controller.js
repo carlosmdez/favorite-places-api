@@ -1,67 +1,91 @@
 const HttpError = require('../models/http-error')
-const uniqid = require('uniqid')
 
 const { signupValidator, loginValidator } = require('../utils/users-validator')
+const User = require('../models/user')
 
-const USERS = [
-  {
-    id: 'u1',
-    name: 'Carlos Méndez',
-    email: 'carlos@gmail.com',
-    password: 'carlos'
-  },
-  {
-    id: 'u2',
-    name: 'John Arreola',
-    email: 'juan@gmail.com',
-    password: 'juan'
-  },
-  {
-    id: 'u3',
-    name: 'Jofran Benítez',
-    email: 'jofran@gmail.com',
-    password: 'jofran'
+const getAllUsers = async (req, res, next) => {
+  let users
+  try {
+    users = await User.find({}, '-password')
+  } catch (err) {
+    const error = new HttpError(
+      'Fetching users fail, please try again later',
+      500
+    )
+    return next(error)
   }
-]
-
-const getAllUsers = (req, res, next) => {
-  if (USERS.length > 0) {
-    return res.json({ users: USERS })
-  }
-  next(new HttpError('Could not find any user', 404))
+  return res.json({
+    users: users.map(user => user.toObject({ getters: true }))
+  })
 }
 
-const signup = (req, res, next) => {
+const signup = async (req, res, next) => {
   const validator = signupValidator(req.body)
   if (!validator.isValid) {
     return next(validator.error)
   }
   const { name, email, password } = req.body
-  const hasUser = USERS.find(user => user.email === email)
-  if (hasUser) {
-    throw new HttpError('Could not create user, email already exist', 409)
+
+  let existingUser
+  try {
+    existingUser = await User.findOne({ email })
+  } catch (err) {
+    const error = new HttpError(
+      'Signing up failed, please try again later',
+      500
+    )
+    return next(error)
   }
-  const createdUser = {
-    id: uniqid(),
+
+  if (existingUser) {
+    const error = new HttpError(
+      'User exists already, please login instead',
+      422
+    )
+    return next(error)
+  }
+  const createdUser = new User({
     name,
     email,
-    password
+    password,
+    image:
+      'https://cdn3.f-cdn.com/contestentries/1376995/30494909/5b566bc71d308_thumb900.jpg',
+    places: []
+  })
+
+  try {
+    await createdUser.save()
+  } catch (err) {
+    const error = new HttpError(
+      'Signing up failed, please try again later',
+      500
+    )
+    return next(error)
   }
-  USERS.push(createdUser)
-  return res.status(201).json(createdUser)
+  return res.status(201).json({ user: createdUser.toObject({ getters: true }) })
 }
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
   const validator = loginValidator(req.body)
   if (!validator.isValid) {
     return next(validator.error)
   }
   const { email, password } = req.body
-  const selectedUser = USERS.find(user => user.email === email)
-  if (!selectedUser || selectedUser.password !== password) {
-    return next(
-      new HttpError('The username and password entered do not match', 401)
+  let existingUser
+  try {
+    existingUser = await User.findOne({ email })
+  } catch (err) {
+    const error = new HttpError('Loging in failed, please try again later', 500)
+    return next(error)
+  }
+
+  //Dummy validation
+  if (!existingUser || existingUser.password !== password) {
+    const error = new HttpError(
+      'Invalid credentials, could not log you in',
+      401
     )
+    return next(error)
   }
   return res.json({ message: 'Logged in!' })
 }

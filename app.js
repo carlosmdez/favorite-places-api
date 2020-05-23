@@ -39,7 +39,11 @@ const project = 'places-app'
 const uri = `mongodb+srv://${user}:${pass}@shanksdb-gyptc.mongodb.net/${project}?retryWrites=true&w=majority`
 
 mongoose
-  .connect(uri, { useUnifiedTopology: true, useNewUrlParser: true })
+  .connect(uri, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true
+  })
   .then(() => {
     console.log('Database connected successfully.')
     app.listen(5000)
