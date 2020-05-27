@@ -92,7 +92,7 @@ const createPlace = async (req, res, next) => {
     title,
     description,
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Vue_de_nuit_de_la_Place_Stanislas_%C3%A0_Nancy.jpg/1088px-Vue_de_nuit_de_la_Place_Stanislas_%C3%A0_Nancy.jpg',
+      'https://iapublication.com/wp-content/uploads/2019/10/destinations-arch-feature.jpg',
     address,
     location: coordinates,
     creator
@@ -124,12 +124,20 @@ const updatePlace = async (req, res, next) => {
   if (!validator.isValid) {
     return next(validator.error)
   }
-  const { title, description } = req.body
+  const { title, description, address } = req.body
+
+  let location
+  try {
+    location = await getCoordsForAddress(address)
+  } catch (error) {
+    return next(error)
+  }
+
   let place
   try {
     place = await Place.findByIdAndUpdate(
       placeId,
-      { title, description },
+      { title, description, address, location },
       { new: true }
     )
   } catch (err) {
