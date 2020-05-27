@@ -16,9 +16,10 @@ const createPlaceSchema = {
 const updatePlaceSchema = {
   properties: {
     title: { type: 'string', minLength: 3 },
-    description: { type: 'string', minLength: 3 }
+    description: { type: 'string', minLength: 3 },
+    address: { type: 'string', minLength: 3 }
   },
-  required: ['title', 'description']
+  required: ['title', 'description', 'address']
 }
 
 const validateCreatePlace = ajv.compile(createPlaceSchema)

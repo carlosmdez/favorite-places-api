@@ -6,7 +6,7 @@ const ajv = new Ajv({ allErrors: true })
 const signupSchema = {
   properties: {
     name: { type: 'string', minLength: 3 },
-    email: { type: 'string', minLength: 5, format: 'email' },
+    email: { type: 'string', format: 'email' },
     password: { type: 'string', minLength: 6 }
   },
   required: ['name', 'email', 'password']
