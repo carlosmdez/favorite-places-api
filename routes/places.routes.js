@@ -8,11 +8,12 @@ const {
   updatePlace,
   deletePlace
 } = require('../controllers/places-controller')
+const fileUpload = require('../middleware/file-upload')
 
 
 router.get('/:placeId', getPlaceById)
 router.get('/user/:userId', getPlacesByUserId)
-router.post('/', createPlace)
+router.post('/', fileUpload.single('image'), createPlace)
 router.patch('/:placeId', updatePlace)
 router.delete('/:placeId', deletePlace)
 

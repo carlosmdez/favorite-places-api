@@ -48,8 +48,7 @@ const signup = async (req, res, next) => {
     name,
     email,
     password,
-    image:
-      'https://cdn3.f-cdn.com/contestentries/1376995/30494909/5b566bc71d308_thumb900.jpg',
+    image: req.file.path,
     places: []
   })
 

@@ -1,3 +1,4 @@
+const fs = require('fs')
 const mongoose = require('mongoose')
 const HttpError = require('../models/http-error')
 const Place = require('../models/place')
@@ -91,8 +92,7 @@ const createPlace = async (req, res, next) => {
   const createdPlace = new Place({
     title,
     description,
-    image:
-      'https://iapublication.com/wp-content/uploads/2019/10/destinations-arch-feature.jpg',
+    image: req.file.path,
     address,
     location: coordinates,
     creator
@@ -172,6 +172,8 @@ const deletePlace = async (req, res, next) => {
     return next(error)
   }
 
+  const imagePath = place.image
+
   try {
     const session = await mongoose.startSession()
     session.startTransaction()
@@ -186,6 +188,11 @@ const deletePlace = async (req, res, next) => {
     )
     return next(error)
   }
+
+  fs.unlink(imagePath, err => {
+    console.log(err)
+  })
+
   return res.json({ message: 'The place was deleted successfully.' })
 }
 

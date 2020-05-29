@@ -6,9 +6,10 @@ const {
   signup,
   login
 } = require('../controllers/users-controller')
+const fileUpload = require('../middleware/file-upload')
 
 router.get('/', getAllUsers)
-router.post('/signup', signup)
+router.post('/signup', fileUpload.single('image'), signup)
 router.post('/login', login)
 
 module.exports = router
