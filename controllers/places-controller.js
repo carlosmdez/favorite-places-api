@@ -69,7 +69,7 @@ const createPlace = async (req, res, next) => {
   if (!validator.isValid) {
     return next(validator.error)
   }
-  const { title, description, address, creator } = req.body
+  const { title, description, address } = req.body
   let coordinates
   try {
     coordinates = await getCoordsForAddress(address)
@@ -79,7 +79,7 @@ const createPlace = async (req, res, next) => {
 
   let user
   try {
-    user = await User.findById(creator)
+    user = await User.findById(req.userData.userId)
   } catch (err) {
     const error = new HttpError('Could not find user for provided id', 404)
     return next(error)
@@ -95,7 +95,7 @@ const createPlace = async (req, res, next) => {
     image: req.file.path,
     address,
     location: coordinates,
-    creator
+    creator: req.userData.userId
   })
 
   try {

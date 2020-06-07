@@ -8,9 +8,8 @@ const createPlaceSchema = {
     title: { type: 'string', minLength: 3 },
     description: { type: 'string', minLength: 3 },
     address: { type: 'string', minLength: 3 },
-    creator: { type: 'string', minLength: 2 }
   },
-  required: ['title', 'description', 'address', 'creator']
+  required: ['title', 'description', 'address']
 }
 
 const updatePlaceSchema = {
