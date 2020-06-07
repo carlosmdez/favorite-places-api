@@ -120,6 +120,7 @@ const createPlace = async (req, res, next) => {
 
 const updatePlace = async (req, res, next) => {
   const placeId = req.params.placeId
+  const { userId } = req.userData
   const validator = updatePlaceValidator(req.body)
   if (!validator.isValid) {
     return next(validator.error)
@@ -135,11 +136,7 @@ const updatePlace = async (req, res, next) => {
 
   let place
   try {
-    place = await Place.findByIdAndUpdate(
-      placeId,
-      { title, description, address, location },
-      { new: true }
-    )
+    place = await Place.findById(placeId)
   } catch (err) {
     const error = new HttpError(
       'Updating place failed, plase try it again',
@@ -147,11 +144,33 @@ const updatePlace = async (req, res, next) => {
     )
     return next(error)
   }
+
+  if (place.creator.toString() !== userId) {
+    const error = new HttpError('You are not allowed to edit this place', 401)
+    return next(error)
+  }
+
+  place.title = title
+  place.description = description
+  place.address = address
+  place.location = location
+
+  try {
+    await place.save()
+  } catch (err) {
+    const error = new HttpError(
+      'Something went wrong, could not update place',
+      500
+    )
+    return next(error)
+  }
+
   return res.json({ place: place.toObject({ getters: true }) })
 }
 
 const deletePlace = async (req, res, next) => {
   const placeId = req.params.placeId
+  const { userId } = req.userData
 
   let place
   try {
@@ -169,6 +188,11 @@ const deletePlace = async (req, res, next) => {
       'Could not find a place for the provided id',
       404
     )
+    return next(error)
+  }
+
+  if (place.creator.id !== userId) {
+    const error = new HttpError('You are not allowed to delete this place', 401)
     return next(error)
   }
 
