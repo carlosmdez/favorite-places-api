@@ -1,0 +1,9 @@
+{
+    "env": {
+        "DB_USER": "carlos",
+        "DB_PASSWORD": "onepiece",
+        "DB_NAME": "places-app",
+        "GOOGLE_API_KEY": "AIzaSyDa5wag1D2eSbt7HxxWtOuajiZXiDXwNtQ",
+        "JWT_SECRET": "cuyitos_secret"
+    }
+}

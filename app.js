@@ -52,10 +52,7 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message } || 'An unknown error ocurred!')
 })
 
-const user = 'carlos'
-const pass = 'onepiece'
-const project = 'places-app'
-const uri = `mongodb+srv://${user}:${pass}@shanksdb-gyptc.mongodb.net/${project}?retryWrites=true&w=majority`
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@shanksdb-gyptc.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
 
 mongoose
   .connect(uri, {
